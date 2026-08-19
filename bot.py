@@ -5,7 +5,6 @@ import feedparser
 from deep_translator import GoogleTranslator
 
 TELEGRAM_BOT_TOKEN = '8760352008:AAEAMs8aU3ZzgJrVNpFWLi-Tg_j2KCSbU9U'
-TELEGRAM_CHAT_ID = '7216355415'
 
 SOURCES = {
     "Investing Live": "https://www.investing.com/rss/news_25.rss",
@@ -13,25 +12,58 @@ SOURCES = {
 }
 
 sent_news = set()
+USERS_FILE = 'users.txt'
 
-def send_telegram_message(message):
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-    payload = {'chat_id': TELEGRAM_CHAT_ID, 'text': message, 'parse_mode': 'Markdown'}
+def load_users():
     try:
-        requests.post(url, json=payload, timeout=10)
+        with open(USERS_FILE, 'r') as f:
+            return set(line.strip() for line in f if line.strip())
+    except FileNotFoundError:
+        return set()
+
+def save_user(chat_id):
+    users = load_users()
+    if str(chat_id) not in users:
+        with open(USERS_FILE, 'a') as f:
+            f.write(f"{chat_id}\n")
+
+def send_telegram_message_to_all(message):
+    users = load_users()
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    }
+    for chat_id in users:
+        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+        payload = {'chat_id': chat_id, 'text': message, 'parse_mode': 'Markdown'}
+        try:
+            requests.post(url, json=payload, timeout=10)
+        except Exception as e:
+            print(f"Telegram Error for {chat_id}: {e}")
+
+def check_updates():
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getUpdates"
+    try:
+        response = requests.get(url, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            for result in data.get('result', []):
+                message = result.get('message', {})
+                chat_id = message.get('chat', {}).get('id')
+                text = message.get('text', '')
+                if chat_id and text == '/start':
+                    save_user(chat_id)
     except Exception as e:
-        print(f"Telegram Error: {e}")
+        print(f"Error checking updates: {e}")
 
 def check_sources():
     print("Checking markets for live news...")
-    # Add User-Agent headers so websites don't block the requests
+    check_updates()
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     }
     
     for source_name, url in SOURCES.items():
         try:
-            # Fetch content using requests first with headers to bypass 500 error blocks
             response = requests.get(url, headers=headers, timeout=10)
             if response.status_code == 200:
                 feed = feedparser.parse(response.content)
@@ -44,7 +76,6 @@ def check_sources():
                         sent_news.add(link)
                         
                         try:
-                            # Guessed target changed to 'ckb' for Sorani Kurdish
                             kurdish_title = GoogleTranslator(source='auto', target='ckb').translate(title)
                         except:
                             kurdish_title = title
@@ -58,15 +89,15 @@ def check_sources():
                             f"SAN FX TRADING"
                         )
                         
-                        send_telegram_message(message)
-                        print(f"New news sent from {source_name}!")
+                        send_telegram_message_to_all(message)
+                        print(f"New news sent to all users from {source_name}!")
             else:
                 print(f"Failed to fetch {source_name}, status code: {response.status_code}")
         except Exception as e:
             print(f"Error checking {source_name}: {e}")
 
 schedule.every(1).minutes.do(check_sources)
-print("San FX Pro Bot is running...")
+print("San FX Pro Bot with Multi-User support is running...")
 check_sources()
 
 while True:
