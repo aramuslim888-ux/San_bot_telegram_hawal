@@ -6,9 +6,10 @@ from deep_translator import GoogleTranslator
 
 TELEGRAM_BOT_TOKEN = '8760352008:AAEAMs8aU3ZzgJrVNpFWLi-Tg_j2KCSbU9U'
 
+# هەردوو سەرچاوەکەی Investing و Forex Factory لێرە دانراون
 SOURCES = {
     "Investing Live": "https://www.investing.com/rss/news_25.rss",
-    "Forex Factory": "https://www.forexfactory.com/news/rss"
+    "Forex Factory": "https://nfs.faireconomy.media/ff_calendar_thisweek.xml"
 }
 
 sent_news = set()
@@ -29,9 +30,6 @@ def save_user(chat_id):
 
 def send_telegram_message_to_all(message):
     users = load_users()
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-    }
     for chat_id in users:
         url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
         payload = {'chat_id': chat_id, 'text': message, 'parse_mode': 'Markdown'}
@@ -56,7 +54,7 @@ def check_updates():
         print(f"Error checking updates: {e}")
 
 def check_sources():
-    print("Checking markets for live news...")
+    print("Checking markets for live news from all sources...")
     check_updates()
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
@@ -69,11 +67,14 @@ def check_sources():
                 feed = feedparser.parse(response.content)
                 if feed.entries:
                     latest = feed.entries[0]
-                    link = latest.link
+                    # بۆ ئەوەی دڵنیابین لینک یان تایتڵی هەواڵەکە دەخوێنرێتەوە
+                    link = getattr(latest, 'link', 'https://www.forexfactory.com' if 'forexfactory' in url else 'https://www.investing.com')
                     title = latest.title
                     
-                    if link not in sent_news:
-                        sent_news.add(link)
+                    identifier = f"{link}-{title}"
+                    
+                    if identifier not in sent_news:
+                        sent_news.add(identifier)
                         
                         try:
                             kurdish_title = GoogleTranslator(source='auto', target='ckb').translate(title)
@@ -97,7 +98,7 @@ def check_sources():
             print(f"Error checking {source_name}: {e}")
 
 schedule.every(1).minutes.do(check_sources)
-print("Aro B news Bot with Multi-User support is running...")
+print("Aro B news Multi-Source Bot is running...")
 check_sources()
 
 while True:
