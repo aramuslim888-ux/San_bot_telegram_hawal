@@ -1,4 +1,4 @@
-requests
+pyrogram
+tgcrypto
 schedule
-feedparser
-deep-translator
+requests
