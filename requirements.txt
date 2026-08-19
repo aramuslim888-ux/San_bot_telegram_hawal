@@ -1,0 +1,4 @@
+requests
+schedule
+feedparser
+deep-translator
