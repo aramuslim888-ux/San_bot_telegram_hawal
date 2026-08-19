@@ -81,12 +81,12 @@ def check_sources():
                             kurdish_title = title
                         
                         message = (
-                            f"🚨 *SAN FX - هەواڵی نوێ ({source_name})*\n\n"
+                            f"🚨 *Aro B news - هەواڵی نوێ ({source_name})*\n\n"
                             f"📌 **{kurdish_title}**\n\n"
                             f"🔗 [تەواوی بابەتەکە بخوێنەوە]({link})\n\n"
                             f"----------------------------------\n"
                             f"هەواڵ و شیکاری ئابووری 📊\n"
-                            f"SAN FX TRADING"
+                            f"Aro B news"
                         )
                         
                         send_telegram_message_to_all(message)
@@ -97,7 +97,7 @@ def check_sources():
             print(f"Error checking {source_name}: {e}")
 
 schedule.every(1).minutes.do(check_sources)
-print("San FX Pro Bot with Multi-User support is running...")
+print("Aro B news Bot with Multi-User support is running...")
 check_sources()
 
 while True:
