@@ -44,7 +44,8 @@ def check_sources():
                         sent_news.add(link)
                         
                         try:
-                            kurdish_title = GoogleTranslator(source='auto', target='ku').translate(title)
+                            # Guessed target changed to 'ckb' for Sorani Kurdish
+                            kurdish_title = GoogleTranslator(source='auto', target='ckb').translate(title)
                         except:
                             kurdish_title = title
                         
