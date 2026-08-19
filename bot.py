@@ -6,7 +6,7 @@ from pyrogram.types import Message
 # زانیاری بۆتەکەت
 TELEGRAM_BOT_TOKEN = '8760352008:AAEAMs8aU3ZzgJrVNpFWLi-Tg_j2KCSbU9U'
 
-# پێویستە api_id و api_hash ی ئەکاونتی تلگرامی خۆت لێرە دابنێیت (لە my.telegram.org وەریاندەگریت)
+# پێویستە api_id و api_hash ی ئەکاونتی تلگرامی خۆت لێرە دابنێیت
 API_ID = 1234567  # لێرە ژمارەی api_id ی خۆت بنووسە
 API_HASH = "your_api_hash_here"  # لێرە api_hashـەکەی خۆت بنووسە
 
