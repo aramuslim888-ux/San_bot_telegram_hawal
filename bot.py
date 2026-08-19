@@ -24,33 +24,43 @@ def send_telegram_message(message):
 
 def check_sources():
     print("Checking markets for live news...")
+    # Add User-Agent headers so websites don't block the requests
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    }
+    
     for source_name, url in SOURCES.items():
         try:
-            feed = feedparser.parse(url)
-            if feed.entries:
-                latest = feed.entries[0]
-                link = latest.link
-                title = latest.title
-                
-                if link not in sent_news:
-                    sent_news.add(link)
+            # Fetch content using requests first with headers to bypass 500 error blocks
+            response = requests.get(url, headers=headers, timeout=10)
+            if response.status_code == 200:
+                feed = feedparser.parse(response.content)
+                if feed.entries:
+                    latest = feed.entries[0]
+                    link = latest.link
+                    title = latest.title
                     
-                    try:
-                        kurdish_title = GoogleTranslator(source='auto', target='ku').translate(title)
-                    except:
-                        kurdish_title = title
-                    
-                    message = (
-                        f"🚨 *SAN FX - هەواڵی نوێ ({source_name})*\n\n"
-                        f"📌 **{kurdish_title}**\n\n"
-                        f"🔗 [تەواوی بابەتەکە بخوێنەوە]({link})\n\n"
-                        f"----------------------------------\n"
-                        f"هەواڵ و شیکاری ئابووری 📊\n"
-                        f"SAN FX TRADING"
-                    )
-                    
-                    send_telegram_message(message)
-                    print(f"New news sent from {source_name}!")
+                    if link not in sent_news:
+                        sent_news.add(link)
+                        
+                        try:
+                            kurdish_title = GoogleTranslator(source='auto', target='ku').translate(title)
+                        except:
+                            kurdish_title = title
+                        
+                        message = (
+                            f"🚨 *SAN FX - هەواڵی نوێ ({source_name})*\n\n"
+                            f"📌 **{kurdish_title}**\n\n"
+                            f"🔗 [تەواوی بابەتەکە بخوێنەوە]({link})\n\n"
+                            f"----------------------------------\n"
+                            f"هەواڵ و شیکاری ئابووری 📊\n"
+                            f"SAN FX TRADING"
+                        )
+                        
+                        send_telegram_message(message)
+                        print(f"New news sent from {source_name}!")
+            else:
+                print(f"Failed to fetch {source_name}, status code: {response.status_code}")
         except Exception as e:
             print(f"Error checking {source_name}: {e}")
 
