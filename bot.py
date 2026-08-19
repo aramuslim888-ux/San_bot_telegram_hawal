@@ -1,18 +1,19 @@
 import time
 import schedule
-import requests
-import feedparser
-from deep_translator import GoogleTranslator
+from pyrogram import Client, filters
+from pyrogram.types import Message
 
+# زانیاری بۆتەکەت
 TELEGRAM_BOT_TOKEN = '8760352008:AAEAMs8aU3ZzgJrVNpFWLi-Tg_j2KCSbU9U'
 
-# هەردوو سەرچاوەکەی Investing و Forex Factory لێرە دانراون
-SOURCES = {
-    "Investing Live": "https://www.investing.com/rss/news_25.rss",
-    "Forex Factory": "https://nfs.faireconomy.media/ff_calendar_thisweek.xml"
-}
+# پێویستە api_id و api_hash ی ئەکاونتی تلگرامی خۆت لێرە دابنێیت (لە my.telegram.org وەریاندەگریت)
+API_ID = 1234567  # لێرە ژمارەی api_id ی خۆت بنووسە
+API_HASH = "your_api_hash_here"  # لێرە api_hashـەکەی خۆت بنووسە
 
-sent_news = set()
+# دروستکردنی کڵایتەکی پیرۆگرام بۆ خوێندنەوەی چەناڵە گشتییەکان
+app = Client("my_news_userbot", api_id=API_ID, api_hash=API_HASH, bot_token=TELEGRAM_BOT_TOKEN)
+
+SOURCE_CHANNEL = "hamai_haje01"  # ئەو چەناڵەی کە دەتەوێت هەواڵەکانی لێ وەربگریت
 USERS_FILE = 'users.txt'
 
 def load_users():
@@ -28,79 +29,40 @@ def save_user(chat_id):
         with open(USERS_FILE, 'a') as f:
             f.write(f"{chat_id}\n")
 
-def send_telegram_message_to_all(message):
+@app.on_message(filters.command("start"))
+async def start_command(client, message: Message):
+    chat_id = message.chat.id
+    save_user(chat_id)
+    await message.reply("سڵاو! بۆتەکە سەرکەوتووانە چالاک بوو و هەواڵەکانت بۆ دەنێرێت. 📊")
+
+# چاودێریکردنی چەناڵەکە بۆ هەر پەیامێکی نوێ
+@app.on_message(filters.chat(SOURCE_CHANNEL))
+async def new_channel_post(client: Client, message: Message):
     users = load_users()
-    for chat_id in users:
-        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-        payload = {'chat_id': chat_id, 'text': message, 'parse_mode': 'Markdown'}
-        try:
-            requests.post(url, json=payload, timeout=10)
-        except Exception as e:
-            print(f"Telegram Error for {chat_id}: {e}")
-
-def check_updates():
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getUpdates"
-    try:
-        response = requests.get(url, timeout=10)
-        if response.status_code == 200:
-            data = response.json()
-            for result in data.get('result', []):
-                message = result.get('message', {})
-                chat_id = message.get('chat', {}).get('id')
-                text = message.get('text', '')
-                if chat_id and text == '/start':
-                    save_user(chat_id)
-    except Exception as e:
-        print(f"Error checking updates: {e}")
-
-def check_sources():
-    print("Checking markets for live news from all sources...")
-    check_updates()
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-    }
     
-    for source_name, url in SOURCES.items():
+    # دەرهێنانی دەقی پەیامەکە یان کاپشنی وێنە/ڤیدیۆکە
+    text = message.text or message.caption or ""
+    
+    # دروستکردنی ناوەڕۆکی نوێ بەبێ فۆروەرد و بە لۆگۆی خۆت
+    formatted_message = (
+        f"🚨 *Aro B news - هەواڵی نوێ*\n\n"
+        f"{text}\n\n"
+        f"----------------------------------\n"
+        f"هەواڵ و شیکاری ئابووری 📊\n"
+        f"Aro B news"
+    )
+    
+    # ناردنەوەی بۆ هەموو ئەو کەسانەی بۆتەکەیان فۆڵۆ کردووە بێ نیشانەی فۆروەرد
+    for chat_id in users:
         try:
-            response = requests.get(url, headers=headers, timeout=10)
-            if response.status_code == 200:
-                feed = feedparser.parse(response.content)
-                if feed.entries:
-                    latest = feed.entries[0]
-                    # بۆ ئەوەی دڵنیابین لینک یان تایتڵی هەواڵەکە دەخوێنرێتەوە
-                    link = getattr(latest, 'link', 'https://www.forexfactory.com' if 'forexfactory' in url else 'https://www.investing.com')
-                    title = latest.title
-                    
-                    identifier = f"{link}-{title}"
-                    
-                    if identifier not in sent_news:
-                        sent_news.add(identifier)
-                        
-                        try:
-                            kurdish_title = GoogleTranslator(source='auto', target='ckb').translate(title)
-                        except:
-                            kurdish_title = title
-                        
-                        message = (
-                            f"🚨 *Aro B news - هەواڵی نوێ ({source_name})*\n\n"
-                            f"📌 **{kurdish_title}**\n\n"
-                            f"🔗 [تەواوی بابەتەکە بخوێنەوە]({link})\n\n"
-                            f"----------------------------------\n"
-                            f"هەواڵ و شیکاری ئابووری 📊\n"
-                            f"Aro B news"
-                        )
-                        
-                        send_telegram_message_to_all(message)
-                        print(f"New news sent to all users from {source_name}!")
+            if message.photo:
+                await client.send_photo(chat_id=int(chat_id), photo=message.photo.file_id, caption=formatted_message, parse_mode="markdown")
+            elif message.video:
+                await client.send_video(chat_id=int(chat_id), video=message.video.file_id, caption=formatted_message, parse_mode="markdown")
             else:
-                print(f"Failed to fetch {source_name}, status code: {response.status_code}")
+                await client.send_message(chat_id=int(chat_id), text=formatted_message, parse_mode="markdown")
         except Exception as e:
-            print(f"Error checking {source_name}: {e}")
+            print(f"Error sending to {chat_id}: {e}")
 
-schedule.every(1).minutes.do(check_sources)
-print("Aro B news Multi-Source Bot is running...")
-check_sources()
-
-while True:
-    schedule.run_pending()
-    time.sleep(1)
+print("Aro B News Userbot & Forwarder is running...")
+app.run()
