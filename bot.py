@@ -9,7 +9,7 @@ TELEGRAM_BOT_TOKEN = '8760352008:AAEAMs8aU3ZzgJrVNpFWLi-Tg_j2KCSbU9U'
 SOURCES = {
     "Investing Live": "https://www.investing.com/rss/news_25.rss",
     "Forex Factory": "https://www.forexfactory.com/news/rss",
-    "Metals Daily": "https://metalsdaily.com/rss"  # زیادکردنی ماڵپەڕی Metals Daily
+    "Metals Daily": "https://metalsdaily.com/rss"
 }
 
 sent_news = set()
@@ -73,11 +73,11 @@ def check_telegram_updates():
                             sent_my_messages.add(msg_id)
                             
                             formatted_msg = (
-                                f"🚨 *Aro B news - هەواڵی خێرا*\n\n"
+                                f"🚨 *MONEY HOTEL NEWS - هەواڵی خێرا*\n\n"
                                 f"{text}\n\n"
                                 f"----------------------------------\n"
-                                f"هەواڵ و شیکاری ئابووری 📊\n"
-                                f"Aro B news"
+                                f"بۆ شیکاری ڕۆژانەی بازاڕە دارایەکان تایبەت بە (ئاڵتون) ⬇️⬇️\n"
+                                f"https://t.me/money_ffo"
                             )
                             send_telegram_message_to_all(formatted_msg)
                             print("Your message was successfully broadcasted!")
@@ -126,12 +126,12 @@ def check_sources():
                             kurdish_title = title
                         
                         message = (
-                            f"🚨 *Aro B news - هەواڵی نوێ ({source_name})*\n\n"
+                            f"🚨 *MONEY HOTEL NEWS - هەواڵی نوێ ({source_name})*\n\n"
                             f"📌 **{kurdish_title}**\n\n"
                             f"🔗 [تەواوی بابەتەکە بخوێنەوە]({link})\n\n"
                             f"----------------------------------\n"
-                            f"هەواڵ و شیکاری ئابووری 📊\n"
-                            f"Aro B news"
+                            f"بۆ شیکاری ڕۆژانەی بازاڕە دارایەکان تایبەت بە (ئاڵتون) ⬇️⬇️\n"
+                            f"https://t.me/money_ffo"
                         )
                         
                         send_telegram_message_to_all(message)
@@ -144,7 +144,7 @@ def check_sources():
 initialize_rss()
 
 schedule.every(1).minutes.do(check_sources)
-print("Aro B News Pro Bot is running smoothly...")
+print("Money Hotel News Bot is running smoothly...")
 
 while True:
     schedule.run_pending()
