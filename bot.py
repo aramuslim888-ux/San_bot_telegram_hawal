@@ -37,7 +37,7 @@ def send_telegram_message_to_all(message):
         except Exception as e:
             print(f"Telegram Error for {chat_id}: {e}")
 
-# تۆمارکردنی بەکارهێنەرانی نوێ کاتێک /start دەنوسن
+# بە شێوازێکی زۆر پاک، هەرکەسێک /start بنووسێت تەنها جارێک لەسەرخۆ تۆماری دەکات
 def register_new_users():
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getUpdates"
     try:
@@ -57,7 +57,7 @@ def register_new_users():
                         welcome_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
                         welcome_payload = {
                             'chat_id': chat_id, 
-                            'text': "سڵاو! بۆتەکە سەرکەوتووانە چالاک بوو و هەواڵەکانت بۆ دەنێرێت. 📊"
+                            'text': "سڵاو! بۆتەکە سەرکەوتووانە چالاک بوو و هەواڵە ئابوورییەکانت بۆ دەنێرێت. 📊"
                         }
                         requests.post(welcome_url, json=welcome_payload, timeout=10)
     except Exception as e:
@@ -103,12 +103,12 @@ def check_sources():
                             kurdish_title = title
                         
                         message = (
-                            f"🚨 *MONEY HOTEL NEWS - هەواڵی نوێ ({source_name})*\n\n"
+                            f"🚨 *Aro B news - هەواڵی نوێ ({source_name})*\n\n"
                             f"📌 **{kurdish_title}**\n\n"
                             f"🔗 [تەواوی بابەتەکە بخوێنەوە]({link})\n\n"
                             f"----------------------------------\n"
-                            f"بۆ شیکاری ڕۆژانەی بازاڕە دارایەکان تایبەت بە (ئاڵتون) ⬇️⬇️\n"
-                            f"https://t.me/money_ffo"
+                            f"هەواڵ و شیکاری ئابووری 📊\n"
+                            f"Aro B news"
                         )
                         
                         send_telegram_message_to_all(message)
@@ -122,7 +122,7 @@ def check_sources():
 initialize_rss()
 
 schedule.every(1).minutes.do(check_sources)
-print("Money Hotel News Bot is running smoothly...")
+print("Aro B News Pro Bot is running smoothly...")
 
 while True:
     schedule.run_pending()
