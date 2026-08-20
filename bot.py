@@ -13,7 +13,8 @@ API_HASH = "your_api_hash_here"  # لێرە api_hashـەکەی خۆت بنووس
 # دروستکردنی کڵایتەکی پیرۆگرام بۆ خوێندنەوەی چەناڵە گشتییەکان
 app = Client("my_news_userbot", api_id=API_ID, api_hash=API_HASH, bot_token=TELEGRAM_BOT_TOKEN)
 
-SOURCE_CHANNEL = "hamai_haje01"  # ئەو چەناڵەی کە دەتەوێت هەواڵەکانی لێ وەربگریت
+# لێرەدا هەردوو چەناڵەکەت داناوە بۆ ئەوەی بەیەکەوە چاودێر بکرێن
+SOURCE_CHANNELS = ["hamai_haje01", "hawal_cxooo"]
 USERS_FILE = 'users.txt'
 
 def load_users():
@@ -35,8 +36,8 @@ async def start_command(client, message: Message):
     save_user(chat_id)
     await message.reply("سڵاو! بۆتەکە سەرکەوتووانە چالاک بوو و هەواڵەکانت بۆ دەنێرێت. 📊")
 
-# چاودێریکردنی چەناڵەکە بۆ هەر پەیامێکی نوێ
-@app.on_message(filters.chat(SOURCE_CHANNEL))
+# چاودێریکردنی هەردوو چەناڵەکە بۆ هەر پەیامێکی نوێ
+@app.on_message(filters.chat(SOURCE_CHANNELS))
 async def new_channel_post(client: Client, message: Message):
     users = load_users()
     
@@ -64,5 +65,5 @@ async def new_channel_post(client: Client, message: Message):
         except Exception as e:
             print(f"Error sending to {chat_id}: {e}")
 
-print("Aro B News Userbot & Forwarder is running...")
+print("Aro B News Multi-Channel Userbot is running...")
 app.run()
