@@ -6,55 +6,42 @@ from deep_translator import GoogleTranslator
 
 TELEGRAM_BOT_TOKEN = '8760352008:AAEAMs8aU3ZzgJrVNpFWLi-Tg_j2KCSbU9U'
 
+# لێرە ئایدی یان یوزەرنێمی ئەو کەناڵە دەنوسرێت کە دەتەوێت هەواڵی بۆ بنێرێت
+CHANNEL_ID = '@hawal_san'
+
 SOURCES = {
     "Investing Live": "https://www.investing.com/rss/news_25.rss",
     "Forex Factory": "https://www.forexfactory.com/news/rss"
 }
 
 sent_news = set()
-USERS_FILE = 'users.txt'
 
-def load_users():
+def send_telegram_message_to_channel(message):
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    payload = {'chat_id': CHANNEL_ID, 'text': message, 'parse_mode': 'Markdown'}
     try:
-        with open(USERS_FILE, 'r') as f:
-            return set(line.strip() for line in f if line.strip())
-    except FileNotFoundError:
-        return set()
-
-def save_user(chat_id):
-    users = load_users()
-    if str(chat_id) not in users:
-        with open(USERS_FILE, 'a') as f:
-            f.write(f"{chat_id}\n")
-
-def send_telegram_message_to_all(message):
-    users = load_users()
-    for chat_id in users:
-        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-        payload = {'chat_id': chat_id, 'text': message, 'parse_mode': 'Markdown'}
-        try:
-            requests.post(url, json=payload, timeout=10)
-        except Exception as e:
-            print(f"Telegram Error for {chat_id}: {e}")
-
-def check_updates():
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getUpdates"
-    try:
-        response = requests.get(url, timeout=10)
-        if response.status_code == 200:
-            data = response.json()
-            for result in data.get('result', []):
-                message = result.get('message', {})
-                chat_id = message.get('chat', {}).get('id')
-                text = message.get('text', '')
-                if chat_id and text == '/start':
-                    save_user(chat_id)
+        response = requests.post(url, json=payload, timeout=10)
+        if response.status_code != 200:
+            print(f"Telegram Error: {response.text}")
     except Exception as e:
-        print(f"Error checking updates: {e}")
+        print(f"Telegram Connection Error: {e}")
+
+def initialize_rss():
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    }
+    for source_name, url in SOURCES.items():
+        try:
+            response = requests.get(url, headers=headers, timeout=10)
+            if response.status_code == 200:
+                feed = feedparser.parse(response.content)
+                if feed.entries:
+                    sent_news.add(feed.entries[0].link)
+        except Exception as e:
+            print(f"Init error {source_name}: {e}")
 
 def check_sources():
     print("Checking markets for live news...")
-    check_updates()
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     }
@@ -82,19 +69,22 @@ def check_sources():
                             f"📌 **{kurdish_title}**\n\n"
                             f"🔗 [تەواوی بابەتەکە بخوێنەوە]({link})\n\n"
                             f"----------------------------------\n"
-                            f"بۆ شیکاری ڕۆژانەی بازاڕە دارایەکان 📊\n"
-                            f"https://t.me/hawal_san"
+                            f"بۆ شیکاری ڕۆژانەی بازاڕە داراییەکان 📊\n"
+                            f"https://t.me/money_ffo"
                         )
                         
-                        send_telegram_message_to_all(message)
-                        print(f"New news sent to all users from {source_name}!")
+                        send_telegram_message_to_channel(message)
+                        print(f"New news sent to channel from {source_name}!")
             else:
                 print(f"Failed to fetch {source_name}, status code: {response.status_code}")
         except Exception as e:
             print(f"Error checking {source_name}: {e}")
 
+# ئامادەکردنی سەرەتایی RSS
+initialize_rss()
+
 schedule.every(1).minutes.do(check_sources)
-print("Money Hotel News Pro Bot with Multi-User support is running...")
+print("Money Hotel News Channel Bot is running smoothly...")
 check_sources()
 
 while True:
