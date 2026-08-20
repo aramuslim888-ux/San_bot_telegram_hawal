@@ -39,7 +39,7 @@ def send_telegram_message_to_all(message):
         except Exception as e:
             print(f"Telegram Error for {chat_id}: {e}")
 
-# پشکنینی پەیامەکان: هەم /start و هەم هەر نامەیەک کە تۆ خۆت بۆ بۆتەکەی دەنێریت
+# پشکنینی پەیامەکان و ناردنی بۆ گشت بەکارهێنەران بە شێوازێکی زۆر خێرا
 def check_telegram_updates():
     global last_update_id
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getUpdates"
@@ -53,10 +53,9 @@ def check_telegram_updates():
                 message = result.get('message', {})
                 chat = message.get('chat', {})
                 chat_id = chat.get('id')
-                text = message.get('text', '')
+                text = message.get('text', '') or message.get('caption', '')
                 
                 if chat and chat.get('type') == 'private' and text:
-                    # ئەگەر /start بوو
                     if text == '/start':
                         users = load_users()
                         if str(chat_id) not in users:
@@ -67,8 +66,6 @@ def check_telegram_updates():
                                 'text': "سڵاو! بۆتەکە سەرکەوتووانە چالاک بوو و هەواڵەکانت بۆ دەنێرێت. 📊"
                             }
                             requests.post(welcome_url, json=welcome_payload, timeout=10)
-                    
-                    # ئەگەر هەر پەیامێکی تر بوو کە تۆ (وەک خاوەن بۆت) بۆتەکەت نارد، ڕاستەوخۆ بۆ هەمووان دەنێرێت
                     else:
                         msg_id = message.get('message_id')
                         if msg_id not in sent_my_messages:
@@ -82,7 +79,7 @@ def check_telegram_updates():
                                 f"Aro B news"
                             )
                             send_telegram_message_to_all(formatted_msg)
-                            print("Your message was successfully broadcasted to all users!")
+                            print("Your message was successfully broadcasted!")
                             
     except Exception as e:
         print(f"Error checking updates: {e}")
@@ -102,7 +99,7 @@ def initialize_rss():
             print(f"Init error {source_name}: {e}")
 
 def check_sources():
-    print("Checking markets and messages...")
+    print("Checking markets and updates...")
     check_telegram_updates()
     
     headers = {
@@ -143,11 +140,10 @@ def check_sources():
         except Exception as e:
             print(f"Error checking {source_name}: {e}")
 
-# ئامادەکردنی سەرەتایی RSS
 initialize_rss()
 
 schedule.every(1).minutes.do(check_sources)
-print("Aro B News Bot Pro is running smoothly...")
+print("Aro B News Pro Bot is running smoothly...")
 
 while True:
     schedule.run_pending()
