@@ -29,9 +29,6 @@ def save_user(chat_id):
 
 def send_telegram_message_to_all(message):
     users = load_users()
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-    }
     for chat_id in users:
         url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
         payload = {'chat_id': chat_id, 'text': message, 'parse_mode': 'Markdown'}
@@ -52,6 +49,13 @@ def check_updates():
                 text = message.get('text', '')
                 if chat_id and text == '/start':
                     save_user(chat_id)
+                    # وەڵامدانەوەی خێرا کاتێک کەسێک /start لێدەدات
+                    welcome_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+                    welcome_payload = {
+                        'chat_id': chat_id, 
+                        'text': "سڵاو! بۆتەکە سەرکەوتووانە چالاک بوو و هەواڵە ئابوورییەکانت بۆ دەنێرێت. 📊"
+                    }
+                    requests.post(welcome_url, json=welcome_payload, timeout=10)
     except Exception as e:
         print(f"Error checking updates: {e}")
 
@@ -81,12 +85,12 @@ def check_sources():
                             kurdish_title = title
                         
                         message = (
-                            f"🚨 *SAN FX - هەواڵی نوێ ({source_name})*\n\n"
+                            f"🚨 *Aro B news - هەواڵی نوێ ({source_name})*\n\n"
                             f"📌 **{kurdish_title}**\n\n"
                             f"🔗 [تەواوی بابەتەکە بخوێنەوە]({link})\n\n"
                             f"----------------------------------\n"
                             f"هەواڵ و شیکاری ئابووری 📊\n"
-                            f"SAN FX TRADING"
+                            f"Aro B news"
                         )
                         
                         send_telegram_message_to_all(message)
@@ -97,7 +101,7 @@ def check_sources():
             print(f"Error checking {source_name}: {e}")
 
 schedule.every(1).minutes.do(check_sources)
-print("San FX Pro Bot with Multi-User support is running...")
+print("Aro B News Pro Bot with Multi-User support is running...")
 check_sources()
 
 while True:
