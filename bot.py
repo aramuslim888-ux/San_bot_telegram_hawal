@@ -11,7 +11,11 @@ SOURCES = {
     "Forex Factory": "https://www.forexfactory.com/news/rss"
 }
 
+# یۆزەرنەیمی ئەو دوو چەناڵەی کە دەتەوێت پەیامەکانیان وەربگریت
+SOURCE_CHANNELS = ["hamai_haje01", "hawal_cxooo"]
+
 sent_news = set()
+sent_channel_messages = set()
 USERS_FILE = 'users.txt'
 
 def load_users():
@@ -37,31 +41,51 @@ def send_telegram_message_to_all(message):
         except Exception as e:
             print(f"Telegram Error for {chat_id}: {e}")
 
-# بە شێوازێکی زۆر پاک، هەرکەسێک /start بنووسێت تەنها جارێک لەسەرخۆ تۆماری دەکات
-def register_new_users():
+# پشکنینی /start و هەروەها پەیامە نوێیەکانی ناو ئەو دوو چەناڵە
+def check_telegram_updates():
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getUpdates"
     try:
         response = requests.get(url, timeout=10)
         if response.status_code == 200:
             data = response.json()
             for result in data.get('result', []):
-                message = result.get('message', {})
-                chat_id = message.get('chat', {}).get('id')
-                text = message.get('text', '')
+                message = result.get('message', {}) or result.get('channel_post', {})
+                chat = message.get('chat', {})
+                chat_id = chat.get('id')
+                chat_username = chat.get('username')
+                text = message.get('text') or message.get('caption', '')
                 
-                if chat_id and text == '/start':
-                    users = load_users()
-                    if str(chat_id) not in users:
-                        save_user(chat_id)
-                        # ناردنی پەیامی بەخێرهاتن بۆ یەک جار
-                        welcome_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-                        welcome_payload = {
-                            'chat_id': chat_id, 
-                            'text': "سڵاو! بۆتەکە سەرکەوتووانە چالاک بوو و هەواڵە ئابوورییەکانت بۆ دەنێرێت. 📊"
-                        }
-                        requests.post(welcome_url, json=welcome_payload, timeout=10)
+                # ئەگەر کەسێک /start لێدەدات
+                if chat and chat.get('type') == 'private' and text == '/start':
+                    if chat_id:
+                        users = load_users()
+                        if str(chat_id) not in users:
+                            save_user(chat_id)
+                            welcome_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+                            welcome_payload = {
+                                'chat_id': chat_id, 
+                                'text': "سڵاو! بۆتەکە سەرکەوتووانە چالاک بوو و هەواڵەکانت بۆ دەنێرێت. 📊"
+                            }
+                            requests.post(welcome_url, json=welcome_payload, timeout=10)
+                
+                # ئەگەر پەیامێک لە یەکێک لەو دوو چەناڵەوە هات
+                if chat_username in SOURCE_CHANNELS and text:
+                    msg_id = message.get('message_id')
+                    if msg_id not in sent_channel_messages:
+                        sent_channel_messages.add(msg_id)
+                        
+                        formatted_channel_msg = (
+                            f"🚨 *Aro B news - هەواڵی چەناڵ*\n\n"
+                            f"{text}\n\n"
+                            f"----------------------------------\n"
+                            f"هەواڵ و شیکاری ئابووری 📊\n"
+                            f"Aro B news"
+                        )
+                        send_telegram_message_to_all(formatted_channel_msg)
+                        print(f"New message forwarded from channel @{chat_username}!")
+                        
     except Exception as e:
-        print(f"Error registering users: {e}")
+        print(f"Error checking updates: {e}")
 
 def initialize_rss():
     headers = {
@@ -78,8 +102,9 @@ def initialize_rss():
             print(f"Init error {source_name}: {e}")
 
 def check_sources():
-    print("Checking markets for live news...")
-    register_new_users()
+    print("Checking markets and channels for live news...")
+    check_telegram_updates()
+    
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     }
@@ -122,7 +147,7 @@ def check_sources():
 initialize_rss()
 
 schedule.every(1).minutes.do(check_sources)
-print("Aro B News Pro Bot is running smoothly...")
+print("Aro B News Pro Bot with Channels & RSS is running smoothly...")
 
 while True:
     schedule.run_pending()
