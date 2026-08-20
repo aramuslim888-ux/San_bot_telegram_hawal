@@ -37,7 +37,7 @@ def send_telegram_message_to_all(message):
         except Exception as e:
             print(f"Telegram Error for {chat_id}: {e}")
 
-# تۆمارکردنی بەکارهێنەرانی نوێ کاتێک /start دەنوسن
+# بە شێوازێکی زۆر پاک، هەرکەسێک /start بنووسێت تەنها جارێک لەسەرخۆ تۆماری دەکات
 def register_new_users():
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getUpdates"
     try:
@@ -53,10 +53,11 @@ def register_new_users():
                     users = load_users()
                     if str(chat_id) not in users:
                         save_user(chat_id)
+                        # ناردنی پەیامی بەخێرهاتن بۆ یەک جار
                         welcome_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
                         welcome_payload = {
                             'chat_id': chat_id, 
-                            'text': "سڵاو! بۆتەکە سەرکەوتووانە چالاک بوو و هەواڵە ئابوورییەکانت بۆ دەنێرێت. 📊"
+                            'text': "سڵاو! بۆتەکە سەرکەوتووانە چالاک بوو و هەواڵەکانت بۆ دەنێرێت. 📊"
                         }
                         requests.post(welcome_url, json=welcome_payload, timeout=10)
     except Exception as e:
@@ -117,6 +118,7 @@ def check_sources():
         except Exception as e:
             print(f"Error checking {source_name}: {e}")
 
+# ئامادەکردنی سەرەتایی RSS
 initialize_rss()
 
 schedule.every(1).minutes.do(check_sources)
