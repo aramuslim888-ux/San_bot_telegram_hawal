@@ -13,7 +13,6 @@ SOURCES = {
 
 sent_news = set()
 USERS_FILE = 'users.txt'
-last_update_id = 0  # بۆ ئەوەی تەنها پەیامی نوێ بخوێنرێتەوە و دووبارە نەبێتەوە
 
 def load_users():
     try:
@@ -38,17 +37,14 @@ def send_telegram_message_to_all(message):
         except Exception as e:
             print(f"Telegram Error for {chat_id}: {e}")
 
-# پشکنینی پەیامی /start بە شێوازێکی زیرەک کە دووبارە نەبێتەوە
-def check_new_users():
-    global last_update_id
+# بە شێوازێکی زۆر پاک، هەرکەسێک /start بنووسێت تەنها جارێک لەسەرخۆ تۆماری دەکات
+def register_new_users():
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getUpdates"
-    params = {'offset': last_update_id + 1, 'timeout': 1}
     try:
-        response = requests.get(url, params=params, timeout=10)
+        response = requests.get(url, timeout=10)
         if response.status_code == 200:
             data = response.json()
             for result in data.get('result', []):
-                last_update_id = result.get('update_id', last_update_id)
                 message = result.get('message', {})
                 chat_id = message.get('chat', {}).get('id')
                 text = message.get('text', '')
@@ -57,18 +53,16 @@ def check_new_users():
                     users = load_users()
                     if str(chat_id) not in users:
                         save_user(chat_id)
-                    
-                    # ناردنی پەیامی بەخێرهاتن تەنها بۆ ئەو کەسەی /start لێدەدات
-                    welcome_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-                    welcome_payload = {
-                        'chat_id': chat_id, 
-                        'text': "سڵاو! بۆتەکە سەرکەوتووانە چالاک بوو و هەواڵە ئابوورییەکانت بۆ دەنێرێت. 📊"
-                    }
-                    requests.post(welcome_url, json=welcome_payload, timeout=10)
+                        # ناردنی پەیامی بەخێرهاتن بۆ یەک جار
+                        welcome_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+                        welcome_payload = {
+                            'chat_id': chat_id, 
+                            'text': "سڵاو! بۆتەکە سەرکەوتووانە چالاک بوو و هەواڵە ئابوورییەکانت بۆ دەنێرێت. 📊"
+                        }
+                        requests.post(welcome_url, json=welcome_payload, timeout=10)
     except Exception as e:
-        print(f"Error checking updates: {e}")
+        print(f"Error registering users: {e}")
 
-# ڕێگری کردن لە ناردنی هەواڵە کۆنەکان لە یەکەم کاتی کارپێکردندا
 def initialize_rss():
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
@@ -79,14 +73,13 @@ def initialize_rss():
             if response.status_code == 200:
                 feed = feedparser.parse(response.content)
                 if feed.entries:
-                    # تەنها لینکە کۆنەکان دەخەینە ناو سەنت ئەوەوە بۆ ئەوەی پێشتر نەگەن
                     sent_news.add(feed.entries[0].link)
         except Exception as e:
             print(f"Init error {source_name}: {e}")
 
 def check_sources():
     print("Checking markets for live news...")
-    check_new_users()
+    register_new_users()
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     }
@@ -125,7 +118,7 @@ def check_sources():
         except Exception as e:
             print(f"Error checking {source_name}: {e}")
 
-# جێبەجێکردنی سەرەتایی بۆ ئەوەی هەواڵی کۆن نەنێرێت
+# ئامادەکردنی سەرەتایی RSS
 initialize_rss()
 
 schedule.every(1).minutes.do(check_sources)
