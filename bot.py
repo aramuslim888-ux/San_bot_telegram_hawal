@@ -5,6 +5,8 @@ import feedparser
 from deep_translator import GoogleTranslator
 
 TELEGRAM_BOT_TOKEN = '8760352008:AAEAMs8aU3ZzgJrVNpFWLi-Tg_j2KCSbU9U'
+
+# یوزەرنێمی کەناڵەکەت بۆ ئەوەی مەسجەکانی بۆ بنێرێت
 CHANNEL_ID = '@hawal_san'
 
 SOURCES = {
@@ -19,8 +21,8 @@ def send_telegram_message_to_channel(message):
     payload = {'chat_id': CHANNEL_ID, 'text': message, 'parse_mode': 'Markdown'}
     try:
         response = requests.post(url, json=payload, timeout=10)
-        print(f"Telegram Response Status: {response.status_code}")
-        print(f"Telegram Response Text: {response.text}")
+        if response.status_code != 200:
+            print(f"Telegram Error: {response.text}")
     except Exception as e:
         print(f"Telegram Error: {e}")
 
@@ -33,15 +35,12 @@ def check_sources():
     for source_name, url in SOURCES.items():
         try:
             response = requests.get(url, headers=headers, timeout=10)
-            print(f"Fetcher status for {source_name}: {response.status_code}")
             if response.status_code == 200:
                 feed = feedparser.parse(response.content)
                 if feed.entries:
                     latest = feed.entries[0]
                     link = latest.link
                     title = latest.title
-                    
-                    print(f"Latest found: {title}")
                     
                     if link not in sent_news:
                         sent_news.add(link)
@@ -59,8 +58,7 @@ def check_sources():
                             f"هەواڵ و شیکاری ئابووری 📊\n"
                             f"SAN FX TRADING\n\n"
                             f"بۆ شیکاری ڕۆژانەی بازاڕە داراییەکان تایبەت بە (ئاڵتون) ⬇️⬇️\n"
-                            f"https://t.me/money_ffo\n"
-                            f"بۆ بەشدار بوون پەیوەندیمان پێوە بکەن"
+                            f"https://t.me/money_ffo"
                         )
                         
                         send_telegram_message_to_channel(message)
