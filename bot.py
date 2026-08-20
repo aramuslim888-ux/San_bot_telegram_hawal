@@ -8,11 +8,14 @@ TELEGRAM_BOT_TOKEN = '8760352008:AAEAMs8aU3ZzgJrVNpFWLi-Tg_j2KCSbU9U'
 
 SOURCES = {
     "Investing Live": "https://www.investing.com/rss/news_25.rss",
-    "Forex Factory": "https://www.forexfactory.com/news/rss"
+    "Forex Factory": "https://www.forexfactory.com/news/rss",
+    "Metals Daily": "https://metalsdaily.com/rss"  # زیادکردنی ماڵپەڕی Metals Daily
 }
 
 sent_news = set()
+sent_my_messages = set()
 USERS_FILE = 'users.txt'
+last_update_id = 0
 
 def load_users():
     try:
@@ -37,31 +40,50 @@ def send_telegram_message_to_all(message):
         except Exception as e:
             print(f"Telegram Error for {chat_id}: {e}")
 
-# بە شێوازێکی زۆر پاک، هەرکەسێک /start بنووسێت تەنها جارێک لەسەرخۆ تۆماری دەکات
-def register_new_users():
+# پشکنینی پەیامەکان و ناردنی بۆ گشت بەکارهێنەران
+def check_telegram_updates():
+    global last_update_id
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getUpdates"
+    params = {'offset': last_update_id + 1, 'timeout': 1}
     try:
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, params=params, timeout=10)
         if response.status_code == 200:
             data = response.json()
             for result in data.get('result', []):
+                last_update_id = result.get('update_id', last_update_id)
                 message = result.get('message', {})
-                chat_id = message.get('chat', {}).get('id')
-                text = message.get('text', '')
+                chat = message.get('chat', {})
+                chat_id = chat.get('id')
+                text = message.get('text', '') or message.get('caption', '')
                 
-                if chat_id and text == '/start':
-                    users = load_users()
-                    if str(chat_id) not in users:
-                        save_user(chat_id)
-                        # ناردنی پەیامی بەخێرهاتن بۆ یەک جار
-                        welcome_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-                        welcome_payload = {
-                            'chat_id': chat_id, 
-                            'text': "سڵاو! بۆتەکە سەرکەوتووانە چالاک بوو و هەواڵە ئابوورییەکانت بۆ دەنێرێت. 📊"
-                        }
-                        requests.post(welcome_url, json=welcome_payload, timeout=10)
+                if chat and chat.get('type') == 'private' and text:
+                    if text == '/start':
+                        users = load_users()
+                        if str(chat_id) not in users:
+                            save_user(chat_id)
+                            welcome_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+                            welcome_payload = {
+                                'chat_id': chat_id, 
+                                'text': "سڵاو! بۆتەکە سەرکەوتووانە چالاک بوو و هەواڵەکانت بۆ دەنێرێت. 📊"
+                            }
+                            requests.post(welcome_url, json=welcome_payload, timeout=10)
+                    else:
+                        msg_id = message.get('message_id')
+                        if msg_id not in sent_my_messages:
+                            sent_my_messages.add(msg_id)
+                            
+                            formatted_msg = (
+                                f"🚨 *Aro B news - هەواڵی خێرا*\n\n"
+                                f"{text}\n\n"
+                                f"----------------------------------\n"
+                                f"هەواڵ و شیکاری ئابووری 📊\n"
+                                f"Aro B news"
+                            )
+                            send_telegram_message_to_all(formatted_msg)
+                            print("Your message was successfully broadcasted!")
+                            
     except Exception as e:
-        print(f"Error registering users: {e}")
+        print(f"Error checking updates: {e}")
 
 def initialize_rss():
     headers = {
@@ -78,8 +100,9 @@ def initialize_rss():
             print(f"Init error {source_name}: {e}")
 
 def check_sources():
-    print("Checking markets for live news...")
-    register_new_users()
+    print("Checking markets and updates...")
+    check_telegram_updates()
+    
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     }
@@ -118,7 +141,6 @@ def check_sources():
         except Exception as e:
             print(f"Error checking {source_name}: {e}")
 
-# ئامادەکردنی سەرەتایی RSS
 initialize_rss()
 
 schedule.every(1).minutes.do(check_sources)
