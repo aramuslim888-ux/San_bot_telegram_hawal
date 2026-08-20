@@ -37,7 +37,7 @@ def send_telegram_message_to_all(message):
         except Exception as e:
             print(f"Telegram Error for {chat_id}: {e}")
 
-# بە شێوازێکی زۆر پاک، هەرکەسێک /start بنووسێت تەنها جارێک لەسەرخۆ تۆماری دەکات
+# تۆمارکردنی بەکارهێنەرانی نوێ کاتێک /start دەنوسن
 def register_new_users():
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getUpdates"
     try:
@@ -53,7 +53,6 @@ def register_new_users():
                     users = load_users()
                     if str(chat_id) not in users:
                         save_user(chat_id)
-                        # ناردنی پەیامی بەخێرهاتن بۆ یەک جار
                         welcome_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
                         welcome_payload = {
                             'chat_id': chat_id, 
@@ -102,13 +101,14 @@ def check_sources():
                         except:
                             kurdish_title = title
                         
+                        # گۆڕینی لۆگۆ و ناونیشان بۆ MONEY HOTEL News لەگەڵ لینکی ئالتون
                         message = (
-                            f"🚨 *Aro B news - هەواڵی نوێ ({source_name})*\n\n"
+                            f"🚨 *MONEY HOTEL News - هەواڵی نوێ ({source_name})*\n\n"
                             f"📌 **{kurdish_title}**\n\n"
                             f"🔗 [تەواوی بابەتەکە بخوێنەوە]({link})\n\n"
                             f"----------------------------------\n"
-                            f"هەواڵ و شیکاری ئابووری 📊\n"
-                            f"Aro B news"
+                            f"بۆ شیکاری ڕۆژانەی بازاڕە دارایەکان تایبەت بە (ئاڵتون) ⬇️⬇️\n"
+                            f"https://t.me/money_ffo"
                         )
                         
                         send_telegram_message_to_all(message)
@@ -118,11 +118,10 @@ def check_sources():
         except Exception as e:
             print(f"Error checking {source_name}: {e}")
 
-# ئامادەکردنی سەرەتایی RSS
 initialize_rss()
 
 schedule.every(1).minutes.do(check_sources)
-print("Aro B News Pro Bot is running smoothly...")
+print("Money Hotel News Bot is running smoothly...")
 
 while True:
     schedule.run_pending()
