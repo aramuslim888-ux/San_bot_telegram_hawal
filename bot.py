@@ -101,7 +101,6 @@ def check_sources():
                         except:
                             kurdish_title = title
                         
-                        # گۆڕینی لۆگۆ و ناونیشان بۆ MONEY HOTEL News لەگەڵ لینکی ئالتون
                         message = (
                             f"🚨 *MONEY HOTEL News - هەواڵی نوێ ({source_name})*\n\n"
                             f"📌 **{kurdish_title}**\n\n"
