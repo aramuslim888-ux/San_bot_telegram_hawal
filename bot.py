@@ -6,9 +6,9 @@ from pyrogram.types import Message
 # زانیاری بۆتەکەت
 TELEGRAM_BOT_TOKEN = '8760352008:AAEAMs8aU3ZzgJrVNpFWLi-Tg_j2KCSbU9U'
 
-# پێویستە api_id و api_hash ی ئەکاونتی تلگرامی خۆت لێرە دابنێیت
-API_ID = 1234567  # لێرە ژمارەی api_id ی خۆت بنووسە
-API_HASH = "your_api_hash_here"  # لێرە api_hashـەکەی خۆت بنووسە
+# زانیاری ئەکاونتەکەت کە لە my.telegram.org وەرتگرتووە
+API_ID = 34131802
+API_HASH = "b33e6e19212e48f0ba4d238bebb3a0d2"
 
 # دروستکردنی کڵایتەکی پیرۆگرام بۆ خوێندنەوەی چەناڵە گشتییەکان
 app = Client("my_news_userbot", api_id=API_ID, api_hash=API_HASH, bot_token=TELEGRAM_BOT_TOKEN)
