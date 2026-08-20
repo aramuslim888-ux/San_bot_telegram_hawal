@@ -5,8 +5,6 @@ import feedparser
 from deep_translator import GoogleTranslator
 
 TELEGRAM_BOT_TOKEN = '8760352008:AAEAMs8aU3ZzgJrVNpFWLi-Tg_j2KCSbU9U'
-
-# یوزەرنێمی کەناڵەکەت بۆ ئەوەی مەسجەکانی بۆ بنێرێت
 CHANNEL_ID = '@hawal_san'
 
 SOURCES = {
@@ -21,8 +19,8 @@ def send_telegram_message_to_channel(message):
     payload = {'chat_id': CHANNEL_ID, 'text': message, 'parse_mode': 'Markdown'}
     try:
         response = requests.post(url, json=payload, timeout=10)
-        if response.status_code != 200:
-            print(f"Telegram Error: {response.text}")
+        print(f"Telegram Response Status: {response.status_code}")
+        print(f"Telegram Response Text: {response.text}")
     except Exception as e:
         print(f"Telegram Error: {e}")
 
@@ -35,39 +33,38 @@ def check_sources():
     for source_name, url in SOURCES.items():
         try:
             response = requests.get(url, headers=headers, timeout=10)
+            print(f"Fetcher status for {source_name}: {response.status_code}")
             if response.status_code == 200:
                 feed = feedparser.parse(response.content)
                 if feed.entries:
-                    # پشکنینی چەند هەواڵی کۆتایی بۆ ئەوەی دڵنیا بین هەواڵ لەدەست ناچێت
-                    for latest in reversed(feed.entries[:3]):
-                        link = latest.link
-                        title = latest.title
+                    latest = feed.entries[0]
+                    link = latest.link
+                    title = latest.title
+                    
+                    print(f"Latest found: {title}")
+                    
+                    if link not in sent_news:
+                        sent_news.add(link)
                         
-                        if link not in sent_news:
-                            sent_news.add(link)
-                            if len(sent_news) > 100:
-                                sent_news.pop()
-                            
-                            try:
-                                kurdish_title = GoogleTranslator(source='auto', target='ckb').translate(title)
-                            except:
-                                kurdish_title = title
-                            
-                            message = (
-                                f"🚨 *SAN FX - هەواڵی نوێ ({source_name})*\n\n"
-                                f"📌 **{kurdish_title}**\n\n"
-                                f"🔗 [تەواوی بابەتەکە بخوێنەوە]({link})\n\n"
-                                f"----------------------------------\n"
-                                f"هەواڵ و شیکاری ئابووری 📊\n"
-                                f"SAN FX TRADING\n\n"
-                                f"بۆ شیکاری ڕۆژانەی بازاڕە داراییەکان تایبەت بە (ئاڵتون) ⬇️⬇️\n"
-                                f"https://t.me/money_ffo\n"
-                                f"بۆ بەشدار بوون پەیوەندیمان پێوە بکەن"
-                            )
-                            
-                            send_telegram_message_to_channel(message)
-                            print(f"New news sent to channel from {source_name}!")
-                            time.sleep(2)
+                        try:
+                            kurdish_title = GoogleTranslator(source='auto', target='ckb').translate(title)
+                        except:
+                            kurdish_title = title
+                        
+                        message = (
+                            f"🚨 *SAN FX - هەواڵی نوێ ({source_name})*\n\n"
+                            f"📌 **{kurdish_title}**\n\n"
+                            f"🔗 [تەواوی بابەتەکە بخوێنەوە]({link})\n\n"
+                            f"----------------------------------\n"
+                            f"هەواڵ و شیکاری ئابووری 📊\n"
+                            f"SAN FX TRADING\n\n"
+                            f"بۆ شیکاری ڕۆژانەی بازاڕە داراییەکان تایبەت بە (ئاڵتون) ⬇️⬇️\n"
+                            f"https://t.me/money_ffo\n"
+                            f"بۆ بەشدار بوون پەیوەندیمان پێوە بکەن"
+                        )
+                        
+                        send_telegram_message_to_channel(message)
+                        print(f"New news sent to channel from {source_name}!")
             else:
                 print(f"Failed to fetch {source_name}, status code: {response.status_code}")
         except Exception as e:
