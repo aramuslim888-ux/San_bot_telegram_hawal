@@ -29,6 +29,9 @@ def save_user(chat_id):
 
 def send_telegram_message_to_all(message):
     users = load_users()
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    }
     for chat_id in users:
         url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
         payload = {'chat_id': chat_id, 'text': message, 'parse_mode': 'Markdown'}
@@ -37,8 +40,7 @@ def send_telegram_message_to_all(message):
         except Exception as e:
             print(f"Telegram Error for {chat_id}: {e}")
 
-# بە شێوازێکی زۆر پاک، هەرکەسێک /start بنووسێت تەنها جارێک لەسەرخۆ تۆماری دەکات
-def register_new_users():
+def check_updates():
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getUpdates"
     try:
         response = requests.get(url, timeout=10)
@@ -48,38 +50,14 @@ def register_new_users():
                 message = result.get('message', {})
                 chat_id = message.get('chat', {}).get('id')
                 text = message.get('text', '')
-                
                 if chat_id and text == '/start':
-                    users = load_users()
-                    if str(chat_id) not in users:
-                        save_user(chat_id)
-                        # ناردنی پەیامی بەخێرهاتن بۆ یەک جار
-                        welcome_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-                        welcome_payload = {
-                            'chat_id': chat_id, 
-                            'text': "سڵاو! بۆتەکە سەرکەوتووانە چالاک بوو و هەواڵەکانت بۆ دەنێرێت. 📊"
-                        }
-                        requests.post(welcome_url, json=welcome_payload, timeout=10)
+                    save_user(chat_id)
     except Exception as e:
-        print(f"Error registering users: {e}")
-
-def initialize_rss():
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-    }
-    for source_name, url in SOURCES.items():
-        try:
-            response = requests.get(url, headers=headers, timeout=10)
-            if response.status_code == 200:
-                feed = feedparser.parse(response.content)
-                if feed.entries:
-                    sent_news.add(feed.entries[0].link)
-        except Exception as e:
-            print(f"Init error {source_name}: {e}")
+        print(f"Error checking updates: {e}")
 
 def check_sources():
     print("Checking markets for live news...")
-    register_new_users()
+    check_updates()
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     }
@@ -103,26 +81,24 @@ def check_sources():
                             kurdish_title = title
                         
                         message = (
-                            f"🚨 *MONEY HOTEL News - هەواڵی نوێ ({source_name})*\n\n"
+                            f"🚨 *SAN FX - هەواڵی نوێ ({source_name})*\n\n"
                             f"📌 **{kurdish_title}**\n\n"
                             f"🔗 [تەواوی بابەتەکە بخوێنەوە]({link})\n\n"
                             f"----------------------------------\n"
-                            f"بۆ شیکاری ڕۆژانەی بازاڕە دارایەکان تایبەت بە (ئاڵتون) ⬇️⬇️\n"
-                            f"https://t.me/money_ffo"
+                            f"هەواڵ و شیکاری ئابووری 📊\n"
+                            f"SAN FX TRADING"
                         )
                         
                         send_telegram_message_to_all(message)
-                        print(f"New news sent from {source_name}!")
+                        print(f"New news sent to all users from {source_name}!")
             else:
                 print(f"Failed to fetch {source_name}, status code: {response.status_code}")
         except Exception as e:
             print(f"Error checking {source_name}: {e}")
 
-# ئامادەکردنی سەرەتایی RSS
-initialize_rss()
-
 schedule.every(1).minutes.do(check_sources)
-print("Money Hotel News Bot is running smoothly...")
+print("San FX Pro Bot with Multi-User support is running...")
+check_sources()
 
 while True:
     schedule.run_pending()
