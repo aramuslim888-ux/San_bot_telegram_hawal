@@ -2,6 +2,7 @@ import time
 import schedule
 import requests
 import feedparser
+from bs4 import BeautifulSoup
 from deep_translator import GoogleTranslator
 
 TELEGRAM_BOT_TOKEN = '8760352008:AAEAMs8aU3ZzgJrVNpFWLi-Tg_j2KCSbU9U'
@@ -42,6 +43,14 @@ def check_sources():
                     link = latest.link
                     title = latest.title
                     
+                    # وەرگرتنی پوختە یان ناوەڕۆکی هەواڵەکە ئەگەر هەبێت
+                    summary_raw = getattr(latest, 'summary', '')
+                    if not summary_raw:
+                        summary_raw = getattr(latest, 'description', '')
+                    
+                    # پاککردنەوەی تاتگی HTML ئەگەر لە ناو پوختەکەدا هەبێت
+                    summary_text = BeautifulSoup(summary_raw, "html.parser").get_text() if summary_raw else ""
+                    
                     if link not in sent_news:
                         sent_news.add(link)
                         
@@ -49,10 +58,23 @@ def check_sources():
                             kurdish_title = GoogleTranslator(source='auto', target='ckb').translate(title)
                         except:
                             kurdish_title = title
+                            
+                        kurdish_summary = ""
+                        if summary_text:
+                            try:
+                                kurdish_summary = GoogleTranslator(source='auto', target='ckb').translate(summary_text[:1000])
+                            except:
+                                kurdish_summary = summary_text
                         
                         message = (
                             f"🚨 *SAN FX - هەواڵی نوێ ({source_name})*\n\n"
                             f"📌 **{kurdish_title}**\n\n"
+                        )
+                        
+                        if kurdish_summary:
+                            message += f"📝 {kurdish_summary}\n\n"
+                            
+                        message += (
                             f"🔗 [تەواوی بابەتەکە بخوێنەوە]({link})\n\n"
                             f"----------------------------------\n"
                             f"هەواڵ و شیکاری ئابووری 📊\n"
