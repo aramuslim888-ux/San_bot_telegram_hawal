@@ -10,8 +10,8 @@ TELEGRAM_BOT_TOKEN = '8760352008:AAEAMs8aU3ZzgJrVNpFWLi-Tg_j2KCSbU9U'
 CHANNEL_ID = '@hawal_san'
 
 SOURCES = {
-    "DailyForex": "https://www.dailyforex.com/forex-news/rss",
-    "Kitco News": "https://www.kitco.com/rss/kitconews.rss"
+    "Investing Live": "https://www.investing.com/rss/news_25.rss",
+    "FXStreet Gold News": "https://www.fxstreet.com/rss/news"
 }
 
 sent_news = set()
