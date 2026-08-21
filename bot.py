@@ -56,9 +56,7 @@ def check_sources():
                             f"🔗 [تەواوی بابەتەکە بخوێنەوە]({link})\n\n"
                             f"----------------------------------\n"
                             f"هەواڵ و شیکاری ئابووری 📊\n"
-                            f"SAN FX TRADING\n\n"
-                            f"بۆ شیکاری ڕۆژانەی بازاڕە داراییەکان (ئاڵتون) ⬇️⬇️\n"
-                            f"https://t.me/money_ffo"
+                            f"SAN FX TRADING"
                         )
                         
                         send_telegram_message_to_channel(message)
