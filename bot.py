@@ -10,8 +10,8 @@ TELEGRAM_BOT_TOKEN = '8760352008:AAEAMs8aU3ZzgJrVNpFWLi-Tg_j2KCSbU9U'
 CHANNEL_ID = '@hawal_san'
 
 SOURCES = {
-    "Investing Live": "https://www.investing.com/rss/news_25.rss",
-    "Forex Factory": "https://www.forexfactory.com/news/rss"
+    "Bloomberg Markets": "https://www.bloomberg.com/markets/rss",
+    "Investing Live": "https://www.investing.com/rss/news_25.rss"
 }
 
 sent_news = set()
@@ -56,7 +56,9 @@ def check_sources():
                             f"🔗 [تەواوی بابەتەکە بخوێنەوە]({link})\n\n"
                             f"----------------------------------\n"
                             f"هەواڵ و شیکاری ئابووری 📊\n"
-                            f"SAN FX TRADING"
+                            f"SAN FX TRADING\n\n"
+                            f"بۆ شیکاری ڕۆژانەی بازاڕە داراییەکان تایبەت بە (ئاڵتون) ⬇️⬇️\n"
+                            f"https://t.me/money_ffo"
                         )
                         
                         send_telegram_message_to_channel(message)
