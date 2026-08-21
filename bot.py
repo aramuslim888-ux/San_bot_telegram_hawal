@@ -11,7 +11,7 @@ CHANNEL_ID = '@hawal_san'
 
 SOURCES = {
     "Investing Live": "https://www.investing.com/rss/news_25.rss",
-    "FXStreet Gold News": "https://www.fxstreet.com/rss/news"
+    "Forex Factory": "https://www.forexfactory.com/news/rss"
 }
 
 sent_news = set()
@@ -56,9 +56,7 @@ def check_sources():
                             f"🔗 [تەواوی بابەتەکە بخوێنەوە]({link})\n\n"
                             f"----------------------------------\n"
                             f"هەواڵ و شیکاری ئابووری 📊\n"
-                            f"SAN FX TRADING\n\n"
-                            f"بۆ شیکاری ڕۆژانەی بازاڕە داراییەکان (ئاڵتون) ⬇️⬇️\n"
-                            f"https://t.me/money_ffo"
+                            f"SAN FX TRADING"
                         )
                         
                         send_telegram_message_to_channel(message)
