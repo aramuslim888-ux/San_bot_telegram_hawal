@@ -3,9 +3,10 @@ import feedparser
 import requests
 import time
 
-# Zanyariyakan
-TOKEN = "Ghp_nbSqHpMZ6r1rviyNMfxI8Q7DmnG0eo1724RU"  # Tokne botakat
+# تۆکنی ڕاستەقینەی بۆتەکەت
+TOKEN = "8760352008:AAEAMs8aU3ZzgJrVNpFWLi-Tg_j2KCSbU9U"
 CHANNEL_ID = "@hawal_san"
+
 # Linki RSS-i Fxstreet
 RSS_URL = "https://www.fxstreet.com/rss"
 
@@ -14,7 +15,8 @@ def send_to_telegram(message):
   url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
   data = {"chat_id": CHANNEL_ID, "text": message}
   try:
-    requests.post(url, data=data)
+    response = requests.post(url, data=data)
+    print(f"Telegram response: {response.text}")
   except Exception as e:
     print(f"Error: {e}")
 
@@ -30,7 +32,7 @@ def main():
           title = entry.title
           summary = entry.summary if "summary" in entry else ""
 
-          # Wergirani wajai bo kurdi (agar pewist be)
+          # Wergirani wajai bo kurdi
           try:
             title_ku = GoogleTranslator(
                 source="auto", target="ku"
@@ -42,7 +44,7 @@ def main():
             title_ku = title
             summary_ku = summary
 
-          message = f"{title_ku}\n\n{summary_ku}\n\n{entry.link}"
+          message = f"🚨 {title_ku}\n\n{summary_ku}\n\n🔗 {entry.link}"
 
           send_to_telegram(message)
           sent_posts.add(entry.link)
@@ -50,7 +52,7 @@ def main():
     except Exception as e:
       print(f"Error in loop: {e}")
 
-    time.sleep(300)  # Chawary 5 deqe bo newe kirdnaway
+    time.sleep(300)  # چاوەڕێی ٥ دەقە بۆ هەواڵی نوێ
 
 
 if __name__ == "__main__":
