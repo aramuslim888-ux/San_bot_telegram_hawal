@@ -11,11 +11,27 @@ TELEGRAM_BOT_TOKEN = '8760352008:AAEAMs8aU3ZzgJrVNpFWLi-Tg_j2KCSbU9U'
 CHANNEL_ID = '@hawal_san'
 
 SOURCES = {
-    "Bloomberg": "https://feeds.bloomberg.com/markets/news.rss",
+    "FXStreet": "https://www.fxstreet.com/rss",
     "Forex Factory": "https://www.forexfactory.com/news/rss"
 }
 
 sent_news = set()
+
+def send_telegram_photo_to_channel(photo_url, caption):
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendPhoto"
+    payload = {
+        'chat_id': CHANNEL_ID, 
+        'photo': photo_url, 
+        'caption': caption, 
+        'parse_mode': 'Markdown'
+    }
+    try:
+        response = requests.post(url, json=payload, timeout=10)
+        if response.status_code != 200:
+            # ئەگەر ناردنی وێنە سەرکەوتوو نەبوو، بە تێکست دەینێرێت
+            send_telegram_message_to_channel(caption)
+    except Exception as e:
+        print(f"Telegram Photo Error: {e}")
 
 def send_telegram_message_to_channel(message):
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
@@ -43,12 +59,21 @@ def check_sources():
                     link = latest.link
                     title = latest.title
                     
-                    # وەرگرتنی پوختە یان ناوەڕۆکی هەواڵەکە ئەگەر هەبێت
+                    # هەوڵدانی دۆزینەوەی وێنە لە فیدی RSS یان لە ناوەڕۆکەکەیدا
+                    image_url = ""
+                    if hasattr(latest, 'media_content') and latest.media_content:
+                        image_url = latest.media_content[0].get('url', '')
+                    elif hasattr(latest, 'enclosures') and latest.enclosures:
+                        for enc in latest.enclosures:
+                            if 'image' in enc.get('type', ''):
+                                image_url = enc.get('href', '')
+                                break
+                    
+                    # پوختەی هەواڵ
                     summary_raw = getattr(latest, 'summary', '')
                     if not summary_raw:
                         summary_raw = getattr(latest, 'description', '')
                     
-                    # پاککردنەوەی تاتگی HTML ئەگەر لە ناو پوختەکەدا هەبێت
                     summary_text = BeautifulSoup(summary_raw, "html.parser").get_text() if summary_raw else ""
                     
                     if link not in sent_news:
@@ -81,7 +106,12 @@ def check_sources():
                             f"SAN FX TRADING"
                         )
                         
-                        send_telegram_message_to_channel(message)
+                        # ئەگەر وێنە هەبوو لەگەڵ وێنە دەنێرێت، ئەگەر نەبوو تەنها تێکست
+                        if image_url:
+                            send_telegram_photo_to_channel(image_url, message)
+                        else:
+                            send_telegram_message_to_channel(message)
+                            
                         print(f"New news sent to channel from {source_name}!")
             else:
                 print(f"Failed to fetch {source_name}, status code: {response.status_code}")
