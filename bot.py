@@ -23,6 +23,13 @@ def send_to_telegram(message):
 
 def main():
   print("Fxstreet Bot is running...")
+
+  # ناردنی پەیامی دڵنیایی لە یەکەم دەستپێکردندا
+  send_to_telegram(
+      "🟢 **بۆتەکەی هەواڵی ئابووری Fxstreet بە سەرکەوتوویی کەوتە کار و"
+      " ئامادەیە!**"
+  )
+
   sent_posts = set()
   while True:
     try:
