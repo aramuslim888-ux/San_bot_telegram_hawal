@@ -1,34 +1,32 @@
 import time
+import feedparser
+from deep_translator import GoogleTranslator
 import requests
-from bs4 import BeautifulSoup
-from googletrans import Translator
 
-# زانیارییە ڕاستەقینەکانی بۆت و کەناڵەکەت
+# زانیارییەکانت
 TOKEN = "8760352008:AAEAMs8aU3ZzgJrVNpFWLi-Tg_j2KCSbU9U"
 CHANNEL_USERNAME = "@hawal_san"
 
-translator = Translator()
+# بەکارهێنانی RSS ی فەرمی FXStreet بۆ هێنانی هەواڵ بە خێرایی
+RSS_URL = "https://www.fxstreet.com/rss"
 
 def get_latest_news():
-    url = "https://www.fxstreet.com"
-    headers = {"User-Agent": "Mozilla/5.0"}
     try:
-        response = requests.get(url, headers=headers, timeout=10)
-        if response.status_code != 200:
-            return None
-            
-        soup = BeautifulSoup(response.text, 'html.parser')
-        news_item = soup.find('div', class_='qa-article-title') or soup.find('h3')
-        if news_item:
-            return news_item.get_text(strip=True)
+        feed = feedparser.parse(RSS_URL)
+        if feed.entries:
+            # وەرگرتنی نوێترین هەواڵ
+            latest_entry = feed.entries[0]
+            title = latest_entry.title
+            return title
     except Exception as e:
-        print(f"Error fetching website: {e}")
+        print(f"Error fetching RSS: {e}")
     return None
 
 def translate_to_kurdish(text):
     try:
-        translation = translator.translate(text, dest='ku')
-        return translation.text
+        # وەرگێڕان بۆ کوردی سۆرانی بە deep-translator کە زۆر جێگیرە
+        translated = GoogleTranslator(source='auto', target='ku').translate(text)
+        return translated
     except Exception as e:
         print(f"Error in translation: {e}")
         return text
@@ -47,7 +45,7 @@ def send_to_telegram(message):
         print(f"Error sending to telegram: {e}")
 
 if __name__ == "__main__":
-    print("Bot started successfully and monitoring FXStreet...")
+    print("Bot started successfully and monitoring FXStreet RSS...")
     last_sent_news = ""
     
     while True:
@@ -55,8 +53,10 @@ if __name__ == "__main__":
         if english_news and english_news != last_sent_news:
             last_sent_news = english_news
             
+            # وەرگێڕانی تایتڵی هەواڵەکە بۆ زمانی کوردی
             kurdish_title = translate_to_kurdish(english_news)
             
+            # شێوازی نامەکە بەو جۆرەی داوات کردووە
             formatted_message = f"""🔴 هەواڵە ئابووریەکان و شیکاری ڕۆژانە
 MONEY HOTEL news
 
@@ -66,6 +66,7 @@ MONEY HOTEL news
 @anyon_boss"""
 
             send_to_telegram(formatted_message)
-            print("New news translated and posted to channel!")
+            print("New news translated and posted to channel successfully!")
             
-        time.sleep(600)
+        # چاوەڕێکردنی ٥ خولەک (٣٠٠ چرکە) بۆ پشکنینی هەواڵی نوێ
+        time.sleep(300)
