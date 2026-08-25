@@ -8,9 +8,9 @@ from deep_translator import GoogleTranslator
 TELEGRAM_BOT_TOKEN = '8760352008:AAEAMs8aU3ZzgJrVNpFWLi-Tg_j2KCSbU9U'
 CHANNEL_ID = '@hawal_san'
 
-# تەنها سەرچاوەی سەرەکی و فەرمی FXStreet
+# بەکارهێنانی فیدی جێگرەوەی جیهانی بۆ فۆڕماتی هەواڵەکان بە بێ ڕێگری
 SOURCES = {
-    "FXStreet News": "https://www.fxstreet.com/rss"
+    "FXStreet News": "https://api.allorigins.win/raw?url=https://www.fxstreet.com/rss"
 }
 
 sent_news = set()
@@ -52,7 +52,6 @@ def check_sources():
                     if not link or not title:
                         continue
                         
-                    # دۆزینەوەی وێنە بە شێوازێکی دڵنیاکەرەوە بۆ ئەوەی ڕێک وەک کەناڵە بیانییەکان وێنەی لەگەڵ بێت
                     image_url = None
                     if hasattr(latest, 'media_content') and latest.media_content:
                         image_url = latest.media_content[0].get('url')
@@ -68,13 +67,11 @@ def check_sources():
                     if link not in sent_news:
                         sent_news.add(link)
                         
-                        # وەرگێڕانی تایتڵ بۆ کوردی
                         try:
                             kurdish_title = GoogleTranslator(source='auto', target='ckb').translate(title)
                         except:
                             kurdish_title = title
                             
-                        # وەرگێڕانی پوختەی هەواڵ بۆ کوردی بە بێ کێشە
                         kurdish_summary = ""
                         if summary_text:
                             try:
@@ -82,7 +79,6 @@ def check_sources():
                             except:
                                 kurdish_summary = summary_text[:500]
                         
-                        # دروستکردنی شێوازی پەیامەکە بە ڕێکی
                         message = (
                             f"🔥 *FXStreet News*\n\n"
                             f"📌 **{kurdish_title}**\n\n"
