@@ -8,10 +8,10 @@ from deep_translator import GoogleTranslator
 TELEGRAM_BOT_TOKEN = '8760352008:AAEAMs8aU3ZzgJrVNpFWLi-Tg_j2KCSbU9U'
 CHANNEL_ID = '@hawal_san'
 
-# بەستەری نوێ و کارا بۆ فیدی هەواڵەکان
+# بەستەری نوێ و کارا کە ڕێگرییان لێ نەکراوە
 SOURCES = {
-    "FXStreet": "https://www.fxstreet.com/rss/news",
-    "Forex Factory": "https://www.forexfactory.com/feed/news"
+    "FX Market News": "https://www.investing.com/rss/news_25.rss",
+    "Forex Live": "https://www.forexlive.com/feed/news"
 }
 
 sent_news = set()
@@ -37,8 +37,7 @@ def send_telegram_message(chat_id, text, photo_url=None):
 def check_sources():
     print("Checking markets for live news...")
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-        'Accept': 'application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.8'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     }
     
     for source_name, url in SOURCES.items():
