@@ -8,9 +8,10 @@ from deep_translator import GoogleTranslator
 TELEGRAM_BOT_TOKEN = '8760352008:AAEAMs8aU3ZzgJrVNpFWLi-Tg_j2KCSbU9U'
 CHANNEL_ID = '@hawal_san'
 
+# بەستەری نوێ و کارا بۆ فیدی هەواڵەکان
 SOURCES = {
-    "FXStreet": "https://www.fxstreet.com/rss",
-    "Forex Factory": "https://www.forexfactory.com/news/rss"
+    "FXStreet": "https://www.fxstreet.com/rss/news",
+    "Forex Factory": "https://www.forexfactory.com/feed/news"
 }
 
 sent_news = set()
@@ -20,29 +21,31 @@ def send_telegram_message(chat_id, text, photo_url=None):
         url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendPhoto"
         payload = {'chat_id': chat_id, 'photo': photo_url, 'caption': text, 'parse_mode': 'Markdown'}
         try:
-            res = requests.post(url, json=payload, timeout=10)
+            res = requests.post(url, json=payload, timeout=15)
             if res.status_code == 200:
                 return
         except:
             pass
             
-    # ئەگەر وێنە نەبوو یان ناردنی وێنە سەرکەوتوو نەبوو، تێکست دەنێرێت
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     payload = {'chat_id': chat_id, 'text': text, 'parse_mode': 'Markdown'}
     try:
-        requests.post(url, json=payload, timeout=10)
+        requests.post(url, json=payload, timeout=15)
     except Exception as e:
         print(f"Telegram Error: {e}")
 
 def check_sources():
     print("Checking markets for live news...")
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'Accept': 'application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.8'
     }
     
     for source_name, url in SOURCES.items():
         try:
-            response = requests.get(url, headers=headers, timeout=10)
+            response = requests.get(url, headers=headers, timeout=15)
+            print(f"Status for {source_name}: {response.status_code}")
+            
             if response.status_code == 200:
                 feed = feedparser.parse(response.content)
                 if feed.entries:
@@ -53,7 +56,6 @@ def check_sources():
                     if not link or not title:
                         continue
                         
-                    # دۆزینەوەی وێنە بە شێوازێکی دڵنیاکەرەوە
                     image_url = None
                     if hasattr(latest, 'media_content') and latest.media_content:
                         image_url = latest.media_content[0].get('url')
