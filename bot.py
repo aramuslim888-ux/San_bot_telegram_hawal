@@ -6,8 +6,6 @@ from bs4 import BeautifulSoup
 from deep_translator import GoogleTranslator
 
 TELEGRAM_BOT_TOKEN = '8760352008:AAEAMs8aU3ZzgJrVNpFWLi-Tg_j2KCSbU9U'
-
-# یوزەرنێمی کەناڵەکەت بۆ ئەوەی مەسجەکانی بۆ بنێرێت
 CHANNEL_ID = '@hawal_san'
 
 SOURCES = {
@@ -17,29 +15,22 @@ SOURCES = {
 
 sent_news = set()
 
-def send_telegram_photo_to_channel(photo_url, caption):
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendPhoto"
-    payload = {
-        'chat_id': CHANNEL_ID, 
-        'photo': photo_url, 
-        'caption': caption, 
-        'parse_mode': 'Markdown'
-    }
-    try:
-        response = requests.post(url, json=payload, timeout=10)
-        if response.status_code != 200:
-            # ئەگەر ناردنی وێنە سەرکەوتوو نەبوو، بە تێکست دەینێرێت
-            send_telegram_message_to_channel(caption)
-    except Exception as e:
-        print(f"Telegram Photo Error: {e}")
-
-def send_telegram_message_to_channel(message):
+def send_telegram_message(chat_id, text, photo_url=None):
+    if photo_url:
+        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendPhoto"
+        payload = {'chat_id': chat_id, 'photo': photo_url, 'caption': text, 'parse_mode': 'Markdown'}
+        try:
+            res = requests.post(url, json=payload, timeout=10)
+            if res.status_code == 200:
+                return
+        except:
+            pass
+            
+    # ئەگەر وێنە نەبوو یان ناردنی وێنە سەرکەوتوو نەبوو، تێکست دەنێرێت
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-    payload = {'chat_id': CHANNEL_ID, 'text': message, 'parse_mode': 'Markdown'}
+    payload = {'chat_id': chat_id, 'text': text, 'parse_mode': 'Markdown'}
     try:
-        response = requests.post(url, json=payload, timeout=10)
-        if response.status_code != 200:
-            print(f"Telegram Error: {response.text}")
+        requests.post(url, json=payload, timeout=10)
     except Exception as e:
         print(f"Telegram Error: {e}")
 
@@ -56,24 +47,23 @@ def check_sources():
                 feed = feedparser.parse(response.content)
                 if feed.entries:
                     latest = feed.entries[0]
-                    link = latest.link
-                    title = latest.title
+                    link = getattr(latest, 'link', '')
+                    title = getattr(latest, 'title', '')
                     
-                    # هەوڵدانی دۆزینەوەی وێنە لە فیدی RSS یان لە ناوەڕۆکەکەیدا
-                    image_url = ""
+                    if not link or not title:
+                        continue
+                        
+                    # دۆزینەوەی وێنە بە شێوازێکی دڵنیاکەرەوە
+                    image_url = None
                     if hasattr(latest, 'media_content') and latest.media_content:
-                        image_url = latest.media_content[0].get('url', '')
+                        image_url = latest.media_content[0].get('url')
                     elif hasattr(latest, 'enclosures') and latest.enclosures:
                         for enc in latest.enclosures:
                             if 'image' in enc.get('type', ''):
-                                image_url = enc.get('href', '')
+                                image_url = enc.get('href')
                                 break
                     
-                    # پوختەی هەواڵ
-                    summary_raw = getattr(latest, 'summary', '')
-                    if not summary_raw:
-                        summary_raw = getattr(latest, 'description', '')
-                    
+                    summary_raw = getattr(latest, 'summary', '') or getattr(latest, 'description', '')
                     summary_text = BeautifulSoup(summary_raw, "html.parser").get_text() if summary_raw else ""
                     
                     if link not in sent_news:
@@ -87,7 +77,7 @@ def check_sources():
                         kurdish_summary = ""
                         if summary_text:
                             try:
-                                kurdish_summary = GoogleTranslator(source='auto', target='ckb').translate(summary_text[:1000])
+                                kurdish_summary = GoogleTranslator(source='auto', target='ckb').translate(summary_text[:800])
                             except:
                                 kurdish_summary = summary_text
                         
@@ -106,13 +96,8 @@ def check_sources():
                             f"SAN FX TRADING"
                         )
                         
-                        # ئەگەر وێنە هەبوو لەگەڵ وێنە دەنێرێت، ئەگەر نەبوو تەنها تێکست
-                        if image_url:
-                            send_telegram_photo_to_channel(image_url, message)
-                        else:
-                            send_telegram_message_to_channel(message)
-                            
-                        print(f"New news sent to channel from {source_name}!")
+                        send_telegram_message(CHANNEL_ID, message, image_url)
+                        print(f"New news sent successfully from {source_name}!")
             else:
                 print(f"Failed to fetch {source_name}, status code: {response.status_code}")
         except Exception as e:
