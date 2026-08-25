@@ -8,9 +8,9 @@ from deep_translator import GoogleTranslator
 TELEGRAM_BOT_TOKEN = '8760352008:AAEAMs8aU3ZzgJrVNpFWLi-Tg_j2KCSbU9U'
 CHANNEL_ID = '@hawal_san'
 
-# بەکارهێنانی فیدی جێگرەوەی جیهانی بۆ فۆڕماتی هەواڵەکان بە بێ ڕێگری
+# بەکارهێنانی فیدی فەرمی و خێرای FXStreet
 SOURCES = {
-    "FXStreet News": "https://api.allorigins.win/raw?url=https://www.fxstreet.com/rss"
+    "FXStreet": "https://api.allorigins.win/raw?url=https://www.fxstreet.com/rss"
 }
 
 sent_news = set()
@@ -22,6 +22,7 @@ def send_telegram_message(chat_id, text, photo_url=None):
         try:
             res = requests.post(url, json=payload, timeout=15)
             if res.status_code == 200:
+                print("Message with photo sent successfully!")
                 return
         except:
             pass
@@ -29,7 +30,9 @@ def send_telegram_message(chat_id, text, photo_url=None):
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     payload = {'chat_id': chat_id, 'text': text, 'parse_mode': 'Markdown'}
     try:
-        requests.post(url, json=payload, timeout=15)
+        res = requests.post(url, json=payload, timeout=15)
+        if res.status_code == 200:
+            print("Text message sent successfully!")
     except Exception as e:
         print(f"Telegram Error: {e}")
 
@@ -42,6 +45,8 @@ def check_sources():
     for source_name, url in SOURCES.items():
         try:
             response = requests.get(url, headers=headers, timeout=15)
+            print(f"Status code: {response.status_code}")
+            
             if response.status_code == 200:
                 feed = feedparser.parse(response.content)
                 if feed.entries:
@@ -52,6 +57,7 @@ def check_sources():
                     if not link or not title:
                         continue
                         
+                    # دۆزینەوەی وێنە
                     image_url = None
                     if hasattr(latest, 'media_content') and latest.media_content:
                         image_url = latest.media_content[0].get('url')
@@ -67,11 +73,13 @@ def check_sources():
                     if link not in sent_news:
                         sent_news.add(link)
                         
+                        # وەرگێڕانی تایتڵ بۆ کوردی
                         try:
                             kurdish_title = GoogleTranslator(source='auto', target='ckb').translate(title)
                         except:
                             kurdish_title = title
                             
+                        # وەرگێڕانی ناوەڕۆک بۆ کوردی
                         kurdish_summary = ""
                         if summary_text:
                             try:
@@ -79,6 +87,7 @@ def check_sources():
                             except:
                                 kurdish_summary = summary_text[:500]
                         
+                        # شێوازی پەیامەکە بە هەمان فۆرماتی داواکراو
                         message = (
                             f"🔥 *FXStreet News*\n\n"
                             f"📌 **{kurdish_title}**\n\n"
@@ -95,15 +104,17 @@ def check_sources():
                         )
                         
                         send_telegram_message(CHANNEL_ID, message, image_url)
-                        print(f"New news sent successfully from FXStreet!")
             else:
-                print(f"Failed to fetch FXStreet, status code: {response.status_code}")
+                print(f"Failed to fetch, status code: {response.status_code}")
         except Exception as e:
-            print(f"Error checking FXStreet: {e}")
+            print(f"Error checking sources: {e}")
 
-schedule.every(1).minutes.do(check_sources)
+# خستنەگەڕی یەکەمجار دەستبەجێ کاتێک کۆدەکە کار دەکات
 print("San FX Pro Bot is running...")
 check_sources()
+
+# پشکنینی خولانەوە هەر ١ خولەک جارێک
+schedule.every(1).minutes.do(check_sources)
 
 while True:
     schedule.run_pending()
