@@ -10,9 +10,9 @@ TELEGRAM_BOT_TOKEN = '8760352008:AAEAMs8aU3ZzgJrVNpFWLi-Tg_j2KCSbU9U'
 # یوزەرنێمی کەناڵەکەت بۆ ئەوەی مەسجەکانی بۆ بنێرێت
 CHANNEL_ID = '@hawal_san'
 
+# تەنها FXStreet مایەوە و Forex Factory لابرا
 SOURCES = {
-    "FXStreet": "https://www.fxstreet.com/rss",
-    "Forex Factory": "https://www.forexfactory.com/news/rss"
+    "FXStreet": "https://www.fxstreet.com/rss"
 }
 
 sent_news = set()
@@ -66,19 +66,19 @@ def check_sources():
                             except:
                                 kurdish_summary = summary_text
                         
+                        # شێوازی ناردنی نامەکە هاوشێوەی ڤیدۆکە بە پەیڕەوکردنی ناوی FXStreet
                         message = (
-                            f"🚨 *SAN FX - هەواڵی نوێ ({source_name})*\n\n"
+                            f"🅕🅧 **FXStreet Forex News**\n\n"
                             f"📌 **{kurdish_title}**\n\n"
                         )
                         
                         if kurdish_summary:
-                            message += f"📝 {kurdish_summary}\n\n"
+                            message += f"💬 {kurdish_summary}\n\n"
                             
                         message += (
-                            f"🔗 [تەواوی بابەتەکە بخوێنەوە]({link})\n\n"
+                            f"🔗 [Read the article]({link})\n\n"
                             f"----------------------------------\n"
-                            f"هەواڵ و شیکاری ئابووری 📊\n"
-                            f"SAN FX TRADING"
+                            f"📊 SAN FX TRADING"
                         )
                         
                         send_telegram_message_to_channel(message)
