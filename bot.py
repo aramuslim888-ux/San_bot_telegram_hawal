@@ -8,10 +8,9 @@ from deep_translator import GoogleTranslator
 TELEGRAM_BOT_TOKEN = '8760352008:AAEAMs8aU3ZzgJrVNpFWLi-Tg_j2KCSbU9U'
 CHANNEL_ID = '@hawal_san'
 
-# بەستەری نوێ و کارا کە ڕێگرییان لێ نەکراوە
+# تەنها سەرچاوەی FXStreet بە فیدێکی جێگیر
 SOURCES = {
-    "FX Market News": "https://www.investing.com/rss/news_25.rss",
-    "Forex Live": "https://www.forexlive.com/feed/news"
+    "FXStreet": "https://www.fxstreet.com/rss"
 }
 
 sent_news = set()
@@ -35,7 +34,7 @@ def send_telegram_message(chat_id, text, photo_url=None):
         print(f"Telegram Error: {e}")
 
 def check_sources():
-    print("Checking markets for live news...")
+    print("Checking FXStreet live news...")
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     }
@@ -43,8 +42,6 @@ def check_sources():
     for source_name, url in SOURCES.items():
         try:
             response = requests.get(url, headers=headers, timeout=15)
-            print(f"Status for {source_name}: {response.status_code}")
-            
             if response.status_code == 200:
                 feed = feedparser.parse(response.content)
                 if feed.entries:
@@ -78,12 +75,13 @@ def check_sources():
                         kurdish_summary = ""
                         if summary_text:
                             try:
-                                kurdish_summary = GoogleTranslator(source='auto', target='ckb').translate(summary_text[:800])
+                                # سنوردارکردنی قەبارەی تێکست بۆ ئەوەی تووشی هەڵەی وەرگێڕان نەبێت
+                                kurdish_summary = GoogleTranslator(source='auto', target='ckb').translate(summary_text[:600])
                             except:
                                 kurdish_summary = summary_text
                         
                         message = (
-                            f"🚨 *SAN FX - هەواڵی نوێ ({source_name})*\n\n"
+                            f"🚨 *SAN FX - هەواڵی نوێ*\n\n"
                             f"📌 **{kurdish_title}**\n\n"
                         )
                         
@@ -91,18 +89,18 @@ def check_sources():
                             message += f"📝 {kurdish_summary}\n\n"
                             
                         message += (
-                            f"🔗 [تەواوی بابەتەکە بخوێنەوە]({link})\n\n"
+                            f"🔗 [Read More]({link})\n\n"
                             f"----------------------------------\n"
                             f"هەواڵ و شیکاری ئابووری 📊\n"
                             f"SAN FX TRADING"
                         )
                         
                         send_telegram_message(CHANNEL_ID, message, image_url)
-                        print(f"New news sent successfully from {source_name}!")
+                        print(f"New news sent successfully from FXStreet!")
             else:
-                print(f"Failed to fetch {source_name}, status code: {response.status_code}")
+                print(f"Failed to fetch FXStreet, status code: {response.status_code}")
         except Exception as e:
-            print(f"Error checking {source_name}: {e}")
+            print(f"Error checking FXStreet: {e}")
 
 schedule.every(1).minutes.do(check_sources)
 print("San FX Pro Bot is running...")
