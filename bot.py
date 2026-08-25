@@ -3,18 +3,17 @@ import feedparser
 from deep_translator import GoogleTranslator
 import requests
 
-# زانیارییەکانت
+# زانیارییە ڕاستەقینەکانی بۆت و کەناڵەکەت
 TOKEN = "8760352008:AAEAMs8aU3ZzgJrVNpFWLi-Tg_j2KCSbU9U"
 CHANNEL_USERNAME = "@hawal_san"
 
-# بەکارهێنانی RSS ی فەرمی FXStreet بۆ هێنانی هەواڵ بە خێرایی
+# بەکارهێنانی RSS ی فەرمی FXStreet بۆ هێنانی هەواڵ بە خێرایی و بێ کێشە
 RSS_URL = "https://www.fxstreet.com/rss"
 
 def get_latest_news():
     try:
         feed = feedparser.parse(RSS_URL)
         if feed.entries:
-            # وەرگرتنی نوێترین هەواڵ
             latest_entry = feed.entries[0]
             title = latest_entry.title
             return title
@@ -24,7 +23,6 @@ def get_latest_news():
 
 def translate_to_kurdish(text):
     try:
-        # وەرگێڕان بۆ کوردی سۆرانی بە deep-translator کە زۆر جێگیرە
         translated = GoogleTranslator(source='auto', target='ku').translate(text)
         return translated
     except Exception as e:
@@ -53,10 +51,10 @@ if __name__ == "__main__":
         if english_news and english_news != last_sent_news:
             last_sent_news = english_news
             
-            # وەرگێڕانی تایتڵی هەواڵەکە بۆ زمانی کوردی
+            # وەرگێڕانی تایتڵی هەواڵەکە بۆ زمانی کوردی سۆرانی
             kurdish_title = translate_to_kurdish(english_news)
             
-            # شێوازی نامەکە بەو جۆرەی داوات کردووە
+            # شێوازی نامەکە هەروەک داوات کردووە
             formatted_message = f"""🔴 هەواڵە ئابووریەکان و شیکاری ڕۆژانە
 MONEY HOTEL news
 
