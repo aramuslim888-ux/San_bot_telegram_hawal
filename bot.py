@@ -8,9 +8,9 @@ from deep_translator import GoogleTranslator
 TELEGRAM_BOT_TOKEN = '8760352008:AAEAMs8aU3ZzgJrVNpFWLi-Tg_j2KCSbU9U'
 CHANNEL_ID = '@hawal_san'
 
-# تەنها سەرچاوەی FXStreet بە فیدێکی جێگیر
+# تەنها سەرچاوەی سەرەکی و فەرمی FXStreet
 SOURCES = {
-    "FXStreet": "https://www.fxstreet.com/rss"
+    "FXStreet News": "https://www.fxstreet.com/rss"
 }
 
 sent_news = set()
@@ -36,7 +36,7 @@ def send_telegram_message(chat_id, text, photo_url=None):
 def check_sources():
     print("Checking FXStreet live news...")
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
     }
     
     for source_name, url in SOURCES.items():
@@ -52,6 +52,7 @@ def check_sources():
                     if not link or not title:
                         continue
                         
+                    # دۆزینەوەی وێنە بە شێوازێکی دڵنیاکەرەوە بۆ ئەوەی ڕێک وەک کەناڵە بیانییەکان وێنەی لەگەڵ بێت
                     image_url = None
                     if hasattr(latest, 'media_content') and latest.media_content:
                         image_url = latest.media_content[0].get('url')
@@ -67,31 +68,33 @@ def check_sources():
                     if link not in sent_news:
                         sent_news.add(link)
                         
+                        # وەرگێڕانی تایتڵ بۆ کوردی
                         try:
                             kurdish_title = GoogleTranslator(source='auto', target='ckb').translate(title)
                         except:
                             kurdish_title = title
                             
+                        # وەرگێڕانی پوختەی هەواڵ بۆ کوردی بە بێ کێشە
                         kurdish_summary = ""
                         if summary_text:
                             try:
-                                # سنوردارکردنی قەبارەی تێکست بۆ ئەوەی تووشی هەڵەی وەرگێڕان نەبێت
-                                kurdish_summary = GoogleTranslator(source='auto', target='ckb').translate(summary_text[:600])
+                                kurdish_summary = GoogleTranslator(source='auto', target='ckb').translate(summary_text[:500])
                             except:
-                                kurdish_summary = summary_text
+                                kurdish_summary = summary_text[:500]
                         
+                        # دروستکردنی شێوازی پەیامەکە بە ڕێکی
                         message = (
-                            f"🚨 *SAN FX - هەواڵی نوێ*\n\n"
+                            f"🔥 *FXStreet News*\n\n"
                             f"📌 **{kurdish_title}**\n\n"
                         )
                         
                         if kurdish_summary:
-                            message += f"📝 {kurdish_summary}\n\n"
+                            message += f"{kurdish_summary}\n\n"
                             
                         message += (
-                            f"🔗 [Read More]({link})\n\n"
+                            f"🔗 [Read More 👈]({link})\n\n"
                             f"----------------------------------\n"
-                            f"هەواڵ و شیکاری ئابووری 📊\n"
+                            f"📊 هەواڵ و شیکاری ئابووری\n"
                             f"SAN FX TRADING"
                         )
                         
