@@ -10,9 +10,9 @@ TELEGRAM_BOT_TOKEN = '8760352008:AAEAMs8aU3ZzgJrVNpFWLi-Tg_j2KCSbU9U'
 # یوزەرنێمی کەناڵەکەت بۆ ئەوەی مەسجەکانی بۆ بنێرێت
 CHANNEL_ID = '@hawal_san'
 
-# تەنها FXStreet مایەوە و Forex Factory لابرا
+# بەکارهێنانی ڕاستەقینەی ماڵپەڕی FXStreet و RSSـەکەی بۆ هێنانی هەواڵەکان
 SOURCES = {
-    "FXStreet": "https://www.fxstreet.com/rss"
+    "FXStreet": "https://www.fxstreet.com/rss/news"
 }
 
 sent_news = set()
@@ -28,7 +28,7 @@ def send_telegram_message_to_channel(message):
         print(f"Telegram Error: {e}")
 
 def check_sources():
-    print("Checking markets for live news...")
+    print("Checking FXStreet live news...")
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     }
@@ -66,7 +66,7 @@ def check_sources():
                             except:
                                 kurdish_summary = summary_text
                         
-                        # شێوازی ناردنی نامەکە هاوشێوەی ڤیدۆکە بە پەیڕەوکردنی ناوی FXStreet
+                        # شێوازی ڕووکاری نامەکە وەک ڤیدۆکە بە سەیڤکردنی دیزاینی تێلیگرام
                         message = (
                             f"🅕🅧 **FXStreet Forex News**\n\n"
                             f"📌 **{kurdish_title}**\n\n"
@@ -82,14 +82,14 @@ def check_sources():
                         )
                         
                         send_telegram_message_to_channel(message)
-                        print(f"New news sent to channel from {source_name}!")
+                        print(f"New news sent to channel from FXStreet!")
             else:
-                print(f"Failed to fetch {source_name}, status code: {response.status_code}")
+                print(f"Failed to fetch FXStreet, status code: {response.status_code}")
         except Exception as e:
-            print(f"Error checking {source_name}: {e}")
+            print(f"Error checking FXStreet: {e}")
 
 schedule.every(1).minutes.do(check_sources)
-print("San FX Pro Bot is running...")
+print("San FX Pro Bot is running with FXStreet...")
 check_sources()
 
 while True:
